@@ -1,3 +1,8 @@
+mod bin;
+mod axis;
+mod h1;
+mod binnings;
+
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
 }
