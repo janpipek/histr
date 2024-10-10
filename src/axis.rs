@@ -23,3 +23,6 @@ impl AxisData {
         (self.bin_edges[n], self.bin_edges[n+1])
     }
 }
+
+
+// TODO: Actually have this as trait so that we can find the contents fast
