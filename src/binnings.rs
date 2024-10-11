@@ -1,11 +1,11 @@
 use crate::axis::AxisData;
 
-trait BinningAlgorithm {
+pub trait BinningAlgorithm {
     fn find_axis(&self, data: &[f64]) -> Result<AxisData, &str>;
 }
 
 
-struct StandardBins {
+pub struct StandardBins {
     pub n_bins: usize,
 }
 
@@ -42,7 +42,6 @@ impl BinningAlgorithm for StandardBins {
 
 #[cfg(test)]
 mod tests {
-    use crate::add;
     use super::*;
 
     mod standard_bins {
