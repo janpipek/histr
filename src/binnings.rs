@@ -56,8 +56,6 @@ impl BinningAlgorithm for StandardBins {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     mod standard_bins {
         use crate::axis::AxisData;
         use crate::binnings::{BinningAlgorithm, StandardBins};

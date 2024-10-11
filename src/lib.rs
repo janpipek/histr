@@ -14,7 +14,6 @@ pub fn h1(data: &[f64]) -> Result<H1, Box<dyn Error>> {
     let axis = binning_algorithm.find_axis(data)?;
     let values = axis.apply(data);
     Ok(H1::new(
-        "",
         axis,
         values,
     ))

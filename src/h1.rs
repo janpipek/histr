@@ -3,18 +3,18 @@ use crate::bin::Bin;
 
 #[derive(Debug)]
 pub struct H1 {
-    name: Option<String>,
+    // We will probably want some meta-data here
+
     axis: AxisData,
     bin_contents: Vec<f64>,
 }
 
 impl H1 {
-    pub fn new(name: &str, axis: AxisData, bin_contents: Vec<f64>) -> Self {
+    pub fn new(axis: AxisData, bin_contents: Vec<f64>) -> Self {
         if axis.len() != bin_contents.len() {
             panic!("Axis and contents lengths must match.");
         }
         H1 {
-            name: Some(String::from(name)),
             axis,
             bin_contents
         }
