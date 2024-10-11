@@ -25,11 +25,12 @@ impl StandardBins {
             (min, max)
         };
         let bin_width = (max - min) / (n as f64);
-        let mut axis_data = AxisData::new((0..=n).map(|i| (i as f64) * bin_width + min).collect());
 
-        // Be explicit about this so that we don't have to worry about floating point errors
-        axis_data[axis_data.len() - 1] = max;
-        axis_data
+        // Compute all bins but for the last to avoid rounding errors
+        let mut raw_data: Vec<f64> = (0..n).map(|i| (i as f64) * bin_width + min).collect();
+        raw_data.push(max);
+
+        AxisData::new(raw_data)
     }
 }
 
