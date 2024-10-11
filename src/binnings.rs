@@ -14,7 +14,14 @@ pub struct StandardBins {
 
 
 impl StandardBins {
-    fn split_interval(&self, min: f64, max: f64) -> AxisData {
+    fn split_interval(&self, min: f64, max: f64) -> Result<Vec<f64>, &str> {
+        if min.is_infinite() {
+            return Err("Infinite values in the data");
+        }
+        if max.is_infinite() {
+            return Err("Infinite values in the data");
+        }
+
         let n: i64 = self.n_bins.try_into().unwrap();
 
         // Update the min/max if values are incomplete
@@ -30,14 +37,13 @@ impl StandardBins {
         let mut raw_data: Vec<f64> = (0..n).map(|i| (i as f64) * bin_width + min).collect();
         raw_data.push(max);
 
-        AxisData::new(raw_data)
+        Ok(raw_data)
     }
-}
 
-impl BinningAlgorithm for StandardBins {
-    fn find_axis(&self, data: &[f64]) -> Result<AxisData, &str> {
+    fn find_bounds(&self, data: &[f64]) -> Result<(f64, f64), &str> {
+        // The default, same as numpy.histogram
         if data.is_empty() {
-            return Ok(self.split_interval(0.0, 1.0))
+            return Ok((0.0, 1.0));
         }
 
         let mut min = f64::INFINITY;
@@ -47,10 +53,21 @@ impl BinningAlgorithm for StandardBins {
             if value.is_nan() {
                 return Err("NaNs in the data");
             }
+            if value.is_infinite() {
+                return Err("Infinite values in the data");
+            }
             if *value < min { min = *value; }
             if *value > max { max = *value; }
         }
-        Ok(self.split_interval(min, max))
+        Ok((min, max))
+    }
+}
+
+impl BinningAlgorithm for StandardBins {
+    fn find_axis(&self, data: &[f64]) -> Result<AxisData, &str> {
+        let (min, max) = self.find_bounds(data)?;
+        let raw_data = self.split_interval(min, max)?;
+        Ok(AxisData::new(raw_data))
     }
 }
 
