@@ -5,25 +5,38 @@ pub trait BinningAlgorithm {
 }
 
 
+/// StandardBins is a simple binning algorithm that splits the data into n_bins
+///
+/// This mimics the behavior of numpy.histogram with a number of bins.
 pub struct StandardBins {
     pub n_bins: usize,
 }
 
+
 impl StandardBins {
-    fn split_interval(&self, min: f64, max: f64) -> Result<AxisData, &str> {
+    fn split_interval(&self, min: f64, max: f64) -> AxisData {
         let n: i64 = self.n_bins.try_into().unwrap();
-        if min == max {
-            return Err("Lower and upper bounds are equal:");
-        }
+
+        // Update the min/max if values are incomplete
+        let (min, max) = if min == max {
+            (min - 0.5, max + 0.5)
+            // Numpy return: (min - 0.5, max + 0.5)
+        } else {
+            (min, max)
+        };
         let bin_width = (max - min) / (n as f64);
-        Ok(AxisData::new((0..=n).map(|i| (i as f64) * bin_width + min).collect()))
+        let mut axis_data = AxisData::new((0..=n).map(|i| (i as f64) * bin_width + min).collect());
+
+        // Be explicit about this so that we don't have to worry about floating point errors
+        axis_data[axis_data.len() - 1] = max;
+        axis_data
     }
 }
 
 impl BinningAlgorithm for StandardBins {
     fn find_axis(&self, data: &[f64]) -> Result<AxisData, &str> {
-        if data.len() < 2 {
-            return Err("Not enough bins");
+        if data.is_empty() {
+            return Ok(self.split_interval(0.0, 1.0))
         }
 
         let mut min = f64::INFINITY;
@@ -36,7 +49,7 @@ impl BinningAlgorithm for StandardBins {
             if *value < min { min = *value; }
             if *value > max { max = *value; }
         }
-        self.split_interval(min, max)
+        Ok(self.split_interval(min, max))
     }
 }
 
