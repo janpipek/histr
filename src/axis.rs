@@ -1,4 +1,6 @@
-#[derive(Debug, PartialEq)]
+use std::iter::zip;
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct AxisData {
     bin_edges: Vec<f64>,
 }
@@ -36,6 +38,22 @@ impl AxisData {
         for value in data.iter() {
             if let Some(bin) = self.find_bin(*value) {
                 result[bin] += 1.0;
+            }
+        }
+        result
+    }
+
+    pub fn apply_weighted(&self, data: &[f64], weights: &[f64]) -> Vec<f64> {
+        if data.len() != weights.len() {
+            panic!("Data and weights must have the same length.");
+        }
+        let mut result = vec![0.0; self.len()];
+
+        // zip data and weights
+        let data_weights = zip(data, weights);
+        for (weight, value) in data_weights {
+            if let Some(bin) = self.find_bin(*value) {
+                result[bin] += weight;
             }
         }
         result
