@@ -90,7 +90,7 @@ fn find_fixed_width_bins(data: &[f64], bin_width: f64) -> Result<Vec<f64>, &'sta
 
     let min_index = (min / bin_width).floor();
     let min_edge = min_index * bin_width;
-    let n_bins: i64 = ((max - min_edge) / bin_width).floor() as i64;
+    let n_bins: i64 = ((max - min_edge) / bin_width).ceil() as i64;
 
     let raw_data: Vec<f64> = (0..=n_bins).map(|i| (i as f64) * bin_width + min_edge).collect();
     Ok(raw_data)
@@ -105,7 +105,7 @@ impl BinningAlgorithm for PrettyBins {
 
     fn find_axis(&self, data: &[f64]) -> Result<Box<GeneralAxis>, &'static str> {
         let (min, max) = find_bounds(data)?;
-        let raw_width = (max - min) / self.approx_bins as f64;
+        let raw_width = (max - min) / (self.approx_bins - 1) as f64;
         let bin_width = find_pretty_width(raw_width);
         Ok(Box::new(GeneralAxis::new(find_fixed_width_bins(&data, bin_width)?)))
     }
@@ -157,7 +157,7 @@ mod tests {
 
         #[test]
         fn valid_data() -> Result<(), Box<dyn Error>> {
-            let data = vec![0.23, 0.47, 0.63, 0.83];
+            let data = vec![0.03, 0.47, 0.63, 0.83];
             let algo = PrettyBins { approx_bins: 4 };
             let axis = algo.find_axis(&data)?;
 
