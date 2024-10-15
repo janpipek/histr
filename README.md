@@ -1,2 +1,3 @@
 # histr
+
 Rust histograms.
