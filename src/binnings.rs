@@ -1,7 +1,9 @@
 use crate::axis::{Axis, GeneralAxis};
 
 pub trait BinningAlgorithm {
-    fn find_axis(&self, data: &[f64]) -> Result<Box<impl Axis>, &str>;
+    type AxisType: Axis;
+
+    fn find_axis(&self, data: &[f64]) -> Result<Box<Self::AxisType>, &str>;
 }
 
 
@@ -62,6 +64,8 @@ impl StandardBins {
 }
 
 impl BinningAlgorithm for StandardBins {
+    type AxisType = GeneralAxis;
+
     fn find_axis<'a>(&self, data: &'a [f64]) -> Result<Box<GeneralAxis>, &'static str> {
         let (min, max) = find_bounds(data)?;
         let raw_data = self.split_interval(min, max)?;
@@ -74,6 +78,8 @@ pub struct FixedWidthBins {
 }
 
 impl BinningAlgorithm for FixedWidthBins {
+    type AxisType = GeneralAxis;
+    
     fn find_axis(&self, data: &[f64]) -> Result<Box<GeneralAxis>, &'static str> {
         Ok(Box::new(GeneralAxis::new(find_fixed_width_bins(&data, self.bin_width)?)))
     }
@@ -95,6 +101,8 @@ pub struct PrettyBins {
 }
 
 impl BinningAlgorithm for PrettyBins {
+    type AxisType = GeneralAxis;
+
     fn find_axis(&self, data: &[f64]) -> Result<Box<GeneralAxis>, &'static str> {
         let (min, max) = find_bounds(data)?;
         let raw_width = (max - min) / self.approx_bins as f64;

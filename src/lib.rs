@@ -1,18 +1,22 @@
-use std::error::Error;
-use crate::h1::H1;
+
+
 
 mod bin;
 mod axis;
 mod h1;
 mod binnings;
 
+use std::error::Error;
+
 use crate::binnings::{StandardBins, BinningAlgorithm};
+use crate::h1::H1;
+use crate::axis::Axis;
 
 
 pub fn h1(data: &[f64]) -> Result<H1, Box<dyn Error>> {
     let binning_algorithm = StandardBins { n_bins: 10 };
     let axis = binning_algorithm.find_axis(data)?;
-    let values = axis.apply(data);
+    let values = axis.as_ref().apply(data);
     Ok(H1::new(
         axis,
         values,
