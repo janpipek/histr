@@ -1,7 +1,9 @@
-use crate::axis::AxisData;
+use crate::axis::{Axis, GeneralAxis};
 
 pub trait BinningAlgorithm {
-    fn find_axis(&self, data: &[f64]) -> Result<AxisData, &str>;
+    type AxisType: Axis;
+
+    fn find_axis(&self, data: &[f64]) -> Result<Box<Self::AxisType>, &str>;
 }
 
 
@@ -62,10 +64,12 @@ impl StandardBins {
 }
 
 impl BinningAlgorithm for StandardBins {
-    fn find_axis(&self, data: &[f64]) -> Result<AxisData, &'static str> {
+    type AxisType = GeneralAxis;
+
+    fn find_axis<'a>(&self, data: &'a [f64]) -> Result<Box<GeneralAxis>, &'static str> {
         let (min, max) = find_bounds(data)?;
         let raw_data = self.split_interval(min, max)?;
-        Ok(AxisData::new(raw_data))
+        Ok(Box::new(GeneralAxis::new(raw_data)))
     }
 }
 
@@ -74,21 +78,22 @@ pub struct FixedWidthBins {
 }
 
 impl BinningAlgorithm for FixedWidthBins {
-    fn find_axis(&self, data: &[f64]) -> Result<AxisData, &str> {
-        find_fixed_width_bins(&data, self.bin_width)
+    type AxisType = GeneralAxis;
+    
+    fn find_axis(&self, data: &[f64]) -> Result<Box<GeneralAxis>, &'static str> {
+        Ok(Box::new(GeneralAxis::new(find_fixed_width_bins(&data, self.bin_width)?)))
     }
 }
 
-fn find_fixed_width_bins(data: &[f64], bin_width: f64) -> Result<AxisData, &'static str>  {
-    let min = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-    let max = data.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+fn find_fixed_width_bins(data: &[f64], bin_width: f64) -> Result<Vec<f64>, &'static str>  {
+    let (min, max) = find_bounds(data)?;
 
     let min_index = (min / bin_width).floor();
     let min_edge = min_index * bin_width;
     let n_bins: i64 = ((max - min_edge) / bin_width).floor() as i64;
 
     let raw_data: Vec<f64> = (0..=n_bins).map(|i| (i as f64) * bin_width + min_edge).collect();
-    Ok(AxisData::new(raw_data))
+    Ok(raw_data)
 }
 
 pub struct PrettyBins {
@@ -96,11 +101,13 @@ pub struct PrettyBins {
 }
 
 impl BinningAlgorithm for PrettyBins {
-    fn find_axis(&self, data: &[f64]) -> Result<AxisData, &str> {
+    type AxisType = GeneralAxis;
+
+    fn find_axis(&self, data: &[f64]) -> Result<Box<GeneralAxis>, &'static str> {
         let (min, max) = find_bounds(data)?;
         let raw_width = (max - min) / self.approx_bins as f64;
         let bin_width = find_pretty_width(raw_width);
-        find_fixed_width_bins(data, bin_width)
+        Ok(Box::new(GeneralAxis::new(find_fixed_width_bins(&data, bin_width)?)))
     }
 }
 
@@ -124,26 +131,28 @@ fn find_pretty_width(raw_width: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     mod standard_bins {
-        use crate::axis::AxisData;
+        use std::error::Error;
+        use crate::axis::{GeneralAxis};
         use crate::binnings::{BinningAlgorithm, StandardBins};
 
         #[test]
-        fn valid_data() {
+        fn valid_data() -> Result<(), Box<dyn Error>> {
             let data = vec![0.0, 0.1, 1.0];
             let algo = StandardBins { n_bins: 4 };
-            let axis = algo.find_axis(&data);
+            let axis = algo.find_axis(&data)?;
 
-            let expected = AxisData::new(
+            let expected = Box::new(GeneralAxis::new(
                 vec![0.0, 0.25, 0.5, 0.75, 1.0]
-            );
+            ));
 
-            assert_eq!(Ok(expected), axis)
+            assert_eq!(expected, axis);
+            Ok(())
         }
     }
 
     mod pretty_bins {
         use std::error::Error;
-        use crate::axis::AxisData;
+        use crate::axis::{GeneralAxis};
         use crate::binnings::{BinningAlgorithm, PrettyBins, find_pretty_width};
 
         #[test]
@@ -152,9 +161,9 @@ mod tests {
             let algo = PrettyBins { approx_bins: 4 };
             let axis = algo.find_axis(&data)?;
 
-            let expected = AxisData::new(
+            let expected = Box::new(GeneralAxis::new(
                 vec![0.0, 0.25, 0.5, 0.75, 1.0]
-            );
+            ));
 
             assert_eq!(expected, axis);
             Ok(())

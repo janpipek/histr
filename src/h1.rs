@@ -1,17 +1,16 @@
-use crate::axis::AxisData;
+use crate::axis::Axis;
 use crate::bin::Bin;
 use std::ops::Add;
 
 #[derive(Debug)]
-pub struct H1 {
+pub struct H1<'a> {
     // We will probably want some meta-data here
-
-    axis: AxisData,
+    axis: Box<dyn Axis + 'a>,
     bin_contents: Vec<f64>,
 }
 
-impl H1 {
-    pub fn new(axis: AxisData, bin_contents: Vec<f64>) -> Self {
+impl <'a> H1<'a> {
+    pub fn new(axis: Box<dyn Axis>, bin_contents: Vec<f64>) -> Self {
         if axis.len() != bin_contents.len() {
             panic!("Axis and contents lengths must match.");
         }
@@ -21,8 +20,8 @@ impl H1 {
         }
     }
 
-    pub fn axis(&self) -> &AxisData {
-        &self.axis
+    pub fn axis(&self) -> &dyn Axis {
+        self.axis.as_ref()
     }
 
     pub fn bin_contents(&self) -> &Vec<f64> {
@@ -30,7 +29,7 @@ impl H1 {
     }
 
     pub fn get_bin(&self, n: usize) -> Bin {
-        let bin_edges = self.axis.get_bin(n);
+        let bin_edges = self.axis().get_bin(n);
         Bin {
             lower: bin_edges.0,
             upper: bin_edges.1,
@@ -63,16 +62,16 @@ impl H1 {
     }
 }
 
-impl Add for H1 {
+impl <'a> Add<&H1<'_>> for H1 <'a> {
     type Output = Result<Self, &'static str>;
 
-    fn add(self, other: Self) -> Result<Self, &'static str> {
-        if self.axis != other.axis {
+    fn add(self, other: &H1) -> Result<Self, &'static str> {
+        if self.axis.equal_bins(other.axis()) {
             return Err("Cannot add histograms with different axes.");
         }
         Ok(
         Self {
-            axis: self.axis.clone(), // or not clone?
+            axis: self.axis.clone_box(), // or not clone?
             bin_contents: self.bin_contents.iter().zip(other.bin_contents.iter()).map(|(a, b)| a + b).collect()
         })
     }
