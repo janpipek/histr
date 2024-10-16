@@ -125,6 +125,11 @@ mod tests {
     }
 
     #[test]
+    fn test_len() {
+        assert_eq!(get_h1().len(), 3)
+    }
+
+    #[test]
     fn test_total() {
         let h1 = get_h1();
         assert_eq!(h1.total(), 6.0);
