@@ -1,6 +1,6 @@
 use crate::axis::Axis;
 use crate::bin::Bin;
-use std::ops::Add;
+use std::ops::{Add, Mul};
 
 #[derive(Debug)]
 pub struct H1<'a> {
@@ -9,15 +9,12 @@ pub struct H1<'a> {
     bin_contents: Vec<f64>,
 }
 
-impl <'a> H1<'a> {
+impl<'a> H1<'a> {
     pub fn new(axis: Box<dyn Axis>, bin_contents: Vec<f64>) -> Self {
         if axis.len() != bin_contents.len() {
             panic!("Axis and contents lengths must match.");
         }
-        H1 {
-            axis,
-            bin_contents
-        }
+        H1 { axis, bin_contents }
     }
 
     pub fn axis(&self) -> &dyn Axis {
@@ -28,12 +25,16 @@ impl <'a> H1<'a> {
         &self.bin_contents
     }
 
+    pub fn total(&self) -> f64 {
+        self.bin_contents.iter().sum()
+    }
+
     pub fn get_bin(&self, n: usize) -> Bin {
         let bin_edges = self.axis().get_bin(n);
         Bin {
             lower: bin_edges.0,
             upper: bin_edges.1,
-            value: self.bin_contents[n]
+            value: self.bin_contents[n],
         }
     }
 
@@ -50,29 +51,94 @@ impl <'a> H1<'a> {
     }
 
     pub fn fill_many(&mut self, values: &[f64]) {
-        self.axis.apply(values).iter().enumerate().for_each(|(bin, value)| {
-            self.bin_contents[bin] += value;
-        });
+        self.axis
+            .apply(values)
+            .iter()
+            .enumerate()
+            .for_each(|(bin, value)| {
+                self.bin_contents[bin] += value;
+            });
     }
 
     pub fn fill_weighted_many(&mut self, values: &[f64], weights: &[f64]) {
-        self.axis.apply_weighted(values, weights).iter().enumerate().for_each(|(bin, value)| {
-            self.bin_contents[bin] += value;
-        });
+        self.axis
+            .apply_weighted(values, weights)
+            .iter()
+            .enumerate()
+            .for_each(|(bin, value)| {
+                self.bin_contents[bin] += value;
+            });
     }
 }
 
-impl <'a> Add<&H1<'_>> for H1 <'a> {
-    type Output = Result<Self, &'static str>;
+impl<'a> Add<&H1<'_>> for &H1<'a> {
+    type Output = Result<H1<'static>, &'static str>;
 
-    fn add(self, other: &H1) -> Result<Self, &'static str> {
-        if self.axis.equal_bins(other.axis()) {
+    fn add(self, other: &H1) -> Result<H1<'static>, &'static str> {
+        if !self.axis.equal_bins(other.axis()) {
             return Err("Cannot add histograms with different axes.");
         }
-        Ok(
-        Self {
+        Ok(H1 {
             axis: self.axis.clone_box(), // or not clone?
-            bin_contents: self.bin_contents.iter().zip(other.bin_contents.iter()).map(|(a, b)| a + b).collect()
+            bin_contents: self
+                .bin_contents
+                .iter()
+                .zip(other.bin_contents.iter())
+                .map(|(a, b)| a + b)
+                .collect(),
         })
+    }
+}
+
+impl<'a> Mul<f64> for &H1<'a> {
+    type Output = Result<H1<'static>, &'static str>;
+
+    fn mul(self, other: f64) -> Result<H1<'static>, &'static str> {
+        Ok(H1 {
+            axis: self.axis.clone_box(), // or not clone?
+            bin_contents: self.bin_contents.iter().map(|&a| other * a).collect(),
+        })
+    }
+}
+
+// TODO: Add support for other numeric types
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::axis::GeneralAxis;
+    use std::error::Error;
+    fn get_h1() -> H1<'static> {
+        // fixture
+        H1 {
+            axis: Box::new(GeneralAxis::new(vec![0., 1., 2., 3.])),
+            bin_contents: vec![1.0, 2.0, 3.0],
+        }
+    }
+
+    #[test]
+    fn test_total() {
+        let h1 = get_h1();
+        assert_eq!(h1.total(), 6.0);
+    }
+
+    #[test]
+    fn test_mul() -> Result<(), Box<dyn Error>> {
+        let h1 = get_h1();
+        let h1_times_3 = (&h1 * 3.0)?;
+
+        assert!(h1_times_3.axis().equal_bins(h1.axis()));
+        assert_eq!(h1_times_3.bin_contents(), &vec![3.0, 6.0, 9.0]);
+        Ok(())
+    }
+
+    #[test]
+    fn test_add() -> Result<(), Box<dyn Error>> {
+        let h1 = get_h1();
+        let h1_times_2 = (&h1 + &h1)?;
+
+        assert!(h1_times_2.axis().equal_bins(h1.axis()));
+        assert_eq!(h1_times_2.bin_contents(), &vec![2.0, 4.0, 6.0]);
+        Ok(())
     }
 }

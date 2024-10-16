@@ -23,7 +23,7 @@ pub trait Axis: Debug {
     }
 
     fn get_bin(&self, n: usize) -> (f64, f64) {
-        (self.bin_edges()[n], self.bin_edges()[n+1])
+        (self.bin_edges()[n], self.bin_edges()[n + 1])
     }
 
     fn apply(&self, data: &[f64]) -> Vec<f64> {
@@ -76,17 +76,23 @@ pub trait Axis: Debug {
 
 impl GeneralAxis {
     pub fn new(bin_edges: Vec<f64>) -> Self {
-        GeneralAxis {
-            bin_edges,
-        }
+        GeneralAxis { bin_edges }
+    }
+}
+
+impl From<&[f64]> for Box<GeneralAxis> {
+    fn from(value: &[f64]) -> Self {
+        return Box::new(GeneralAxis::new(value.to_vec()));
     }
 }
 
 impl Axis for GeneralAxis {
-    fn bin_edges(&self) -> &Vec<f64> { &self.bin_edges }
+    fn bin_edges(&self) -> &Vec<f64> {
+        &self.bin_edges
+    }
 
     fn clone_box(&self) -> Box<dyn Axis> {
-        return Box::new(GeneralAxis::new(self.bin_edges.clone()))
+        return Box::new(GeneralAxis::new(self.bin_edges.clone()));
     }
 }
 
@@ -95,11 +101,13 @@ impl Axis for GeneralAxis {
 #[cfg(test)]
 mod tests {
     mod find_bin {
-        use crate::axis::{GeneralAxis, Axis};
+        use crate::axis::{Axis, GeneralAxis};
 
         #[test]
         fn test_below() {
-            let ax = GeneralAxis { bin_edges: vec![1.0, 2.0, 3.0]};
+            let ax = GeneralAxis {
+                bin_edges: vec![1.0, 2.0, 3.0],
+            };
 
             assert_eq!(ax.find_bin(1.0), Some(0));
             assert_eq!(ax.find_bin(2.2), Some(1));
