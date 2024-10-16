@@ -22,8 +22,12 @@ pub trait Axis: Debug {
         self.bin_edges().len() - 1
     }
 
-    fn get_bin(&self, n: usize) -> (f64, f64) {
-        (self.bin_edges()[n], self.bin_edges()[n + 1])
+    fn get_bin(&self, n: usize) -> Option<(f64, f64)>  {
+        if n >= self.len() {
+            None
+        }  else {
+            Some((self.bin_edges()[n], self.bin_edges()[n + 1]))
+        }
     }
 
     fn apply(&self, data: &[f64]) -> Vec<f64> {

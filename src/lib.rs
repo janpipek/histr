@@ -35,7 +35,7 @@ mod tests {
             let h = h1(&[0.0, 1.0]).unwrap();
 
             // First bin should be
-            let bin = h.get_bin(0);
+            let bin = h.get_bin(0).unwrap();
             let Bin {
                 value,
                 lower,

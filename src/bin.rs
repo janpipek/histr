@@ -1,5 +1,5 @@
 // TODO: parameterize types
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Bin {
     pub value: f64,
     pub lower: f64,

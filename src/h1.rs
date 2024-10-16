@@ -25,17 +25,23 @@ impl<'a> H1<'a> {
         &self.bin_contents
     }
 
+    pub fn len(&self) -> usize {
+        self.axis.len()
+    }
+
     pub fn total(&self) -> f64 {
         self.bin_contents.iter().sum()
     }
 
-    pub fn get_bin(&self, n: usize) -> Bin {
-        let bin_edges = self.axis().get_bin(n);
-        Bin {
-            lower: bin_edges.0,
-            upper: bin_edges.1,
-            value: self.bin_contents[n],
+    pub fn get_bin(&self, n: usize) -> Option<Bin> {
+        if let Some(bin_edges) = self.axis().get_bin(n) {
+            Some(Bin {
+                lower: bin_edges.0,
+                upper: bin_edges.1,
+                value: self.bin_contents[n],
+            })
         }
+        else { None }
     }
 
     pub fn fill(&mut self, value: f64) {
@@ -107,7 +113,9 @@ impl<'a> Mul<f64> for &H1<'a> {
 mod tests {
     use super::*;
     use crate::axis::GeneralAxis;
+    use crate::bin::Bin;
     use std::error::Error;
+
     fn get_h1() -> H1<'static> {
         // fixture
         H1 {
@@ -140,5 +148,34 @@ mod tests {
         assert!(h1_times_2.axis().equal_bins(h1.axis()));
         assert_eq!(h1_times_2.bin_contents(), &vec![2.0, 4.0, 6.0]);
         Ok(())
+    }
+
+    #[test]
+    fn test_fill() {
+        let mut h1 = get_h1();
+
+        h1.fill(1.5);  // 2nd bin
+        assert_eq!(h1.bin_contents(), &vec![1.0, 3.0, 3.0]);
+
+        h1.fill(10.5); // outside bounds
+        assert_eq!(h1.bin_contents(), &vec![1.0, 3.0, 3.0]);
+    }
+
+    #[test]
+    fn test_fill_many() {
+        let mut h1 = get_h1();
+
+        // Some values out of bounds
+        h1.fill_many(&[-5., 1.5, 2.3, 7.5]);
+        assert_eq!(h1.bin_contents(), &vec![1.0, 3.0, 4.0]);
+    }
+
+    #[test]
+    fn test_get_bin() {
+        let h1 = get_h1();
+        let bin = h1.get_bin(1).unwrap();
+        assert_eq!(bin, Bin { value: 2.0, lower: 1.0, upper: 2.0});
+
+        assert_eq!(h1.get_bin(h1.len()), None);
     }
 }
