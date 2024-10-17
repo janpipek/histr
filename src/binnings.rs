@@ -1,7 +1,7 @@
 use crate::axis::{Axis, GeneralAxis};
 
 pub trait BinningAlgorithm {
-    type AxisType: Axis;
+    type AxisType: Axis + 'static;
 
     fn find_axis(&self, data: &[f64]) -> Result<Box<Self::AxisType>, &str>;
 }
