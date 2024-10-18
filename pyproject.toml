@@ -1,5 +1,6 @@
 [project]
 name = "histr"
+requires-python = ">=3.10"
 
 [build-system]
 requires = ["maturin>=1.0,<2.0"]
@@ -9,3 +10,8 @@ build-backend = "maturin"
 # "extension-module" tells pyo3 we want to build an extension module (skips linking against libpython.so)
 features = ["pyo3/extension-module"]
 manifest-path = "crates/histr-o3/Cargo.toml"
+
+[tool.uv]
+dev-dependencies = [
+    "ipython>=8.28.0",
+]
