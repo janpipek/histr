@@ -66,14 +66,15 @@ impl<'a> H1<'a> {
             });
     }
 
-    pub fn fill_weighted_many(&mut self, values: &[f64], weights: &[f64]) {
+    pub fn fill_weighted_many(&mut self, values: &[f64], weights: &[f64]) -> Result<(), &'static str> {
         self.axis
-            .apply_weighted(values, weights)
+            .apply_weighted(values, weights)?
             .iter()
             .enumerate()
             .for_each(|(bin, value)| {
-                self.bin_contents[bin] += value;
+                self.bin_contents[bin] = self.bin_contents[bin] + value;
             });
+        Ok(())
     }
 }
 

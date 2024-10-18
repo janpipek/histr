@@ -40,9 +40,9 @@ pub trait Axis: Debug {
         result
     }
 
-    fn apply_weighted(&self, data: &[f64], weights: &[f64]) -> Vec<f64> {
+    fn apply_weighted(&self, data: &[f64], weights: &[f64]) -> Result<Vec<f64>, &'static str> {
         if data.len() != weights.len() {
-            panic!("Data and weights must have the same length.");
+            return Err("Data and weights must have the same length.");
         }
         let mut result = vec![0.0; self.len()];
 
@@ -53,7 +53,7 @@ pub trait Axis: Debug {
                 result[bin] += weight;
             }
         }
-        result
+        Ok(result)
     }
 
     fn find_bin(&self, value: f64) -> Option<usize> {
