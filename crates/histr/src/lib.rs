@@ -1,16 +1,16 @@
-mod axis;
-mod bin;
-mod binnings;
-mod h1;
+pub mod axis;
+pub mod bin;
+pub mod binnings;
+pub mod h1;
 
 use std::error::Error;
 
 use crate::axis::{Axis, GeneralAxis};
-use crate::binnings::{BinningAlgorithm, StandardBins};
+use crate::binnings::{BinningAlgorithm, PrettyBins, FixedWidthBins};
 pub use crate::h1::H1;
 
 pub fn h1(data: &[f64]) -> Result<H1<'static>, Box<dyn Error>> {
-    let binning_algorithm = StandardBins { n_bins: 10 };
+    let binning_algorithm: PrettyBins = PrettyBins { approx_bins: 12 };
     let axis = binning_algorithm.find_axis(data)?;
     let values = axis.as_ref().apply(data);
     Ok(H1::new(axis, values))
@@ -42,7 +42,7 @@ macro_rules! h1 {
     ($data:expr, bin_width: $bin_width: expr) => {
         h1_with_binning(
             $data,
-            &crate::binnings::FixedWidthBins {
+            &FixedWidthBins {
                 bin_width: $bin_width,
             },
         )

@@ -1,4 +1,4 @@
-test:
+test-rust:
     cargo test
 
 build:
@@ -6,4 +6,8 @@ build:
 
 ipython:
     maturin develop --uv
+    uv sync
     uv run ipython
+
+clean:
+    rm -rf target

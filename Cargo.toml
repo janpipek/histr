@@ -1,5 +1,3 @@
 [workspace]
-members = [
-    "crates/histr"
-    , "crates/histr-o3"]
+members = ["crates/histr", "crates/histr-o3"]
 resolver = "2"
