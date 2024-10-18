@@ -2,4 +2,4 @@ test:
     cargo test
 
 build:
-    cargo build
+    maturin build
