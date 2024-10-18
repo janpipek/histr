@@ -1,7 +1,19 @@
 [project]
 name = "histr"
 requires-python = ">=3.10"
+description = "A histogram library"
 version = "0.0.1"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Jan Pipek", email = "jan.pipek@gmail.com" }
+]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Rust"
+]
+
+[project.urls]
+source = "https://github.com/janpipek/histr"
 
 [build-system]
 requires = ["maturin>=1.0,<2.0"]
