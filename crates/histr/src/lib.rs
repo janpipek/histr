@@ -7,7 +7,7 @@ use std::error::Error;
 
 use crate::axis::{Axis, GeneralAxis};
 use crate::binnings::{BinningAlgorithm, StandardBins};
-use crate::h1::H1;
+pub use crate::h1::H1;
 
 pub fn h1(data: &[f64]) -> Result<H1<'static>, Box<dyn Error>> {
     let binning_algorithm = StandardBins { n_bins: 10 };
@@ -31,6 +31,7 @@ pub fn h1_with_binning(
     Ok(H1::new(axis, values))
 }
 
+#[macro_export]
 macro_rules! h1 {
     ($data:expr) => {
         h1($data)
