@@ -42,7 +42,7 @@ macro_rules! h1 {
     ($data:expr, bin_width: $bin_width: expr) => {
         h1_with_binning(
             $data,
-            &FixedWidthBins {
+            &$crate::binnings::FixedWidthBins {
                 bin_width: $bin_width,
             },
         )

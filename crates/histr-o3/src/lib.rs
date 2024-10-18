@@ -2,7 +2,6 @@ use pyo3::exceptions::PyException;
 use pyo3::PyObject;
 use pyo3::prelude::*;
 use histr::*;
-use histr::binnings::*;
 
 #[pyclass(name = "H1")]
 pub struct PyH1 {
@@ -11,21 +10,32 @@ pub struct PyH1 {
 
 #[pymethods]
 impl PyH1 {
+    #[getter]
     fn bin_contents(&self, py: Python) -> PyObject {
         self.inner.bin_contents().clone().into_py(py)
     }
 
+    #[getter]
     fn bin_edges(&self, py: Python) -> PyObject {
         self.inner.axis().bin_edges().clone().into_py(py)
     }
 
+    #[getter]
     fn total(&self) -> f64 {
         self.inner.total()
+    }
+
+    fn fill(&mut self, value: f64) {
+        self.inner.fill(value);
+    }
+
+    fn __repr__(&self) -> String {
+        format!("H1({} bins)", self.inner.len())
     }
 }
 
 #[pyfunction(name = "h1")]
-#[pyo3(signature = (data, *, bin_width))]
+#[pyo3(signature = (data, *, bin_width=None, ))]
 fn py_h1(py: Python<'_>, data: PyObject, bin_width: Option<f64>) -> PyResult<PyH1> {
     let values: Vec<f64> = data.extract(py)?;
     let h1 = match bin_width {
