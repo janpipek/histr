@@ -1,0 +1,34 @@
+[project]
+name = "histr"
+requires-python = ">=3.10"
+description = "A histogram library"
+version = "0.0.1"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Jan Pipek", email = "jan.pipek@gmail.com" }
+]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Rust"
+]
+
+[project.urls]
+source = "https://github.com/janpipek/histr"
+
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"   
+
+[tool.maturin]
+# "extension-module" tells pyo3 we want to build an extension module (skips linking against libpython.so)
+features = ["pyo3/extension-module"]
+manifest-path = "crates/histr-o3/Cargo.toml"
+python-source = "python"
+module-name = "histr._histr"
+
+[tool.uv]
+dev-dependencies = [
+    "ipython>=8.28.0",
+    "numpy>=2.1.2",
+    "pytest>=8.3.3",
+]

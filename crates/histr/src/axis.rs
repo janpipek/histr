@@ -6,7 +6,7 @@ pub struct GeneralAxis {
     bin_edges: Vec<f64>,
 }
 
-pub trait Axis: Debug {
+pub trait Axis: Debug + Send {
     fn bin_edges(&self) -> &Vec<f64>;
 
     fn min(&self) -> f64 {
@@ -22,10 +22,10 @@ pub trait Axis: Debug {
         self.bin_edges().len() - 1
     }
 
-    fn get_bin(&self, n: usize) -> Option<(f64, f64)>  {
+    fn get_bin(&self, n: usize) -> Option<(f64, f64)> {
         if n >= self.len() {
             None
-        }  else {
+        } else {
             Some((self.bin_edges()[n], self.bin_edges()[n + 1]))
         }
     }
@@ -48,7 +48,7 @@ pub trait Axis: Debug {
 
         // zip data and weights
         let data_weights = zip(data, weights);
-        for (weight, value) in data_weights {
+        for (value, weight) in data_weights {
             if let Some(bin) = self.find_bin(*value) {
                 result[bin] += weight;
             }

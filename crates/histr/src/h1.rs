@@ -40,8 +40,9 @@ impl<'a> H1<'a> {
                 upper: bin_edges.1,
                 value: self.bin_contents[n],
             })
+        } else {
+            None
         }
-        else { None }
     }
 
     pub fn fill(&mut self, value: f64) {
@@ -66,7 +67,11 @@ impl<'a> H1<'a> {
             });
     }
 
-    pub fn fill_weighted_many(&mut self, values: &[f64], weights: &[f64]) -> Result<(), &'static str> {
+    pub fn fill_weighted_many(
+        &mut self,
+        values: &[f64],
+        weights: &[f64],
+    ) -> Result<(), &'static str> {
         self.axis
             .apply_weighted(values, weights)?
             .iter()
@@ -160,7 +165,7 @@ mod tests {
     fn test_fill() {
         let mut h1 = get_h1();
 
-        h1.fill(1.5);  // 2nd bin
+        h1.fill(1.5); // 2nd bin
         assert_eq!(h1.bin_contents(), &vec![1.0, 3.0, 3.0]);
 
         h1.fill(10.5); // outside bounds
@@ -180,7 +185,14 @@ mod tests {
     fn test_get_bin() {
         let h1 = get_h1();
         let bin = h1.get_bin(1).unwrap();
-        assert_eq!(bin, Bin { value: 2.0, lower: 1.0, upper: 2.0});
+        assert_eq!(
+            bin,
+            Bin {
+                value: 2.0,
+                lower: 1.0,
+                upper: 2.0
+            }
+        );
 
         assert_eq!(h1.get_bin(h1.len()), None);
     }
