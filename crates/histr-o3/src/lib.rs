@@ -35,12 +35,18 @@ impl PyH1 {
 }
 
 #[pyfunction(name = "h1")]
-#[pyo3(signature = (data, *, bin_width=None, ))]
-fn py_h1(py: Python<'_>, data: PyObject, bin_width: Option<f64>) -> PyResult<PyH1> {
+#[pyo3(signature = (data, *, bin_width=None, bin_edges=None))]
+fn py_h1(py: Python<'_>, data: PyObject, bin_width: Option<f64>, bin_edges: Option<PyObject>) -> PyResult<PyH1> {
     let values: Vec<f64> = data.extract(py)?;
     let h1 = match bin_width {
         Some(bin_width) => h1!(&values, bin_width: bin_width),
-        None => h1!(&values),
+        None => match bin_edges {
+            Some(bin_edges) => {
+                let bin_edges: Vec<f64> = bin_edges.extract(py)?;
+                Ok(h1!(&values, bin_edges: &bin_edges))
+            }
+            None => h1!(&values),
+        }
     };
     match h1 {
         Ok(h1) => Ok(PyH1 { inner: h1 }),

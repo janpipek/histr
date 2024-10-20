@@ -6,7 +6,7 @@ pub mod h1;
 use std::error::Error;
 
 use crate::axis::{Axis, GeneralAxis};
-use crate::binnings::{BinningAlgorithm, PrettyBins, FixedWidthBins};
+use crate::binnings::{BinningAlgorithm, PrettyBins};
 pub use crate::h1::H1;
 
 pub fn h1(data: &[f64]) -> Result<H1<'static>, Box<dyn Error>> {
@@ -36,8 +36,8 @@ macro_rules! h1 {
     ($data:expr) => {
         h1($data)
     };
-    ($data:expr, $bins:expr) => {
-        h1_with_bins($data, $bins)
+    ($data:expr, bin_edges: $bin_edges:expr) => {
+        h1_with_bins($data, $bin_edges)
     };
     ($data:expr, bin_width: $bin_width: expr) => {
         h1_with_binning(
