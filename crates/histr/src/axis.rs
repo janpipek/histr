@@ -6,6 +6,14 @@ pub struct GeneralAxis {
     bin_edges: Vec<f64>,
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct FixedWidthAxis {
+    min: f64,
+    max: f64,
+    n_bins: usize,
+    bin_width: f64,
+}
+
 pub trait Axis: Debug + Send {
     fn bin_edges(&self) -> &Vec<f64>;
 
@@ -81,6 +89,40 @@ pub trait Axis: Debug + Send {
 impl GeneralAxis {
     pub fn new(bin_edges: Vec<f64>) -> Self {
         GeneralAxis { bin_edges }
+    }
+}
+
+impl Axis for FixedWidthAxis {
+    fn bin_edges(&self) -> &Vec<f64> {
+        let mut edges = vec![self.min];
+        for i in 1..(self.n_bins as usize) {
+            edges.push(self.min + i as f64 * self.bin_width);
+        }
+        edges.push(self.max);
+        &edges
+    }
+
+    fn clone_box(&self) -> Box<dyn Axis> {
+        return Box::new(FixedWidthAxis {
+            min: self.min,
+            n_bins: self.n_bins,
+            max: self.max,
+            bin_width: self.bin_width,
+        });
+    }
+
+    fn find_bin(&self, value: f64) -> Option<usize> {
+        if value < self.min {
+            return None;
+        }
+        if value == self.max {
+            return Some((self.n_bins - 1) as usize);
+        }
+        let bin = ((value - self.min) / self.bin_width).floor() as usize;
+        if bin >= self.n_bins {
+            return None;
+        }
+        Some(bin)
     }
 }
 
