@@ -48,7 +48,7 @@ pub trait Axis: Debug + Send {
 
         // zip data and weights
         let data_weights = zip(data, weights);
-        for (weight, value) in data_weights {
+        for (value, weight) in data_weights {
             if let Some(bin) = self.find_bin(*value) {
                 result[bin] += weight;
             }
