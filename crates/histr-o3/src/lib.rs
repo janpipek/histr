@@ -20,13 +20,36 @@ impl PyH1 {
         self.inner.axis().bin_edges().clone().into_py(py)
     }
 
+    fn __len__(&self) -> usize {
+        self.inner.len()
+    }
+
     #[getter]
     fn total(&self) -> f64 {
         self.inner.total()
     }
 
-    fn fill(&mut self, value: f64) {
-        self.inner.fill(value);
+    #[pyo3(signature = (value, *, weight=None))]
+    fn fill(&mut self, value: f64, weight: Option<f64>) {
+        match weight {
+            Some(weight) => self.inner.fill_weighted(value, weight),
+            None => self.inner.fill(value),
+        }
+    }
+
+    #[pyo3(signature = (values, *, weights=None))]
+    fn fill_many(&mut self, py: Python<'_>, values: PyObject, weights: Option<PyObject>) -> PyResult<()> {
+        let values: Vec<f64> = values.extract(py).unwrap();
+        match weights {
+            Some(weights) => {
+                let weights: Vec<f64> = weights.extract(py)?;
+                self.inner.fill_weighted_many(&values, &weights).unwrap();
+            }
+            None => {
+                self.inner.fill_many(&values);
+            }
+        }
+        Ok(())
     }
 
     fn __repr__(&self) -> String {
