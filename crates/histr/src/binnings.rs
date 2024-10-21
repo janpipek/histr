@@ -1,4 +1,4 @@
-use crate::axis::{Axis, GeneralAxis};
+use crate::axis::{Axis, GeneralAxis, FixedWidthAxis};
 
 pub trait BinningAlgorithm {
     type AxisType: Axis + 'static;
