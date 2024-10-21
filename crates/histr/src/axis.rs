@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::fmt::Debug;
 use std::iter::zip;
 
@@ -15,7 +16,7 @@ pub struct FixedWidthAxis {
 }
 
 pub trait Axis: Debug + Send {
-    fn bin_edges(&self) -> &Vec<f64>;
+    fn bin_edges(&self) -> Cow<Vec<f64>>;
 
     fn min(&self) -> f64 {
         self.bin_edges()[0]
@@ -93,22 +94,13 @@ impl GeneralAxis {
 }
 
 impl Axis for FixedWidthAxis {
-    fn bin_edges(&self) -> &Vec<f64> {
+    fn bin_edges(&self) -> Cow<Vec<f64>> {
         let mut edges = vec![self.min];
         for i in 1..(self.n_bins as usize) {
             edges.push(self.min + i as f64 * self.bin_width);
         }
         edges.push(self.max);
-        &edges
-    }
-
-    fn clone_box(&self) -> Box<dyn Axis> {
-        return Box::new(FixedWidthAxis {
-            min: self.min,
-            n_bins: self.n_bins,
-            max: self.max,
-            bin_width: self.bin_width,
-        });
+        Cow::Owned(edges)
     }
 
     fn find_bin(&self, value: f64) -> Option<usize> {
@@ -124,6 +116,15 @@ impl Axis for FixedWidthAxis {
         }
         Some(bin)
     }
+
+    fn clone_box(&self) -> Box<dyn Axis> {
+        return Box::new(FixedWidthAxis {
+            min: self.min,
+            n_bins: self.n_bins,
+            max: self.max,
+            bin_width: self.bin_width,
+        });
+    }
 }
 
 impl From<&[f64]> for Box<GeneralAxis> {
@@ -133,8 +134,8 @@ impl From<&[f64]> for Box<GeneralAxis> {
 }
 
 impl Axis for GeneralAxis {
-    fn bin_edges(&self) -> &Vec<f64> {
-        &self.bin_edges
+    fn bin_edges(&self) -> Cow<Vec<f64>> {
+        Cow::Borrowed(&self.bin_edges)
     }
 
     fn clone_box(&self) -> Box<dyn Axis> {
