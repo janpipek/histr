@@ -17,7 +17,7 @@ impl PyH1 {
 
     #[getter]
     fn bin_edges(&self, py: Python) -> PyObject {
-        self.inner.axis().bin_edges().clone().into_py(py)
+        self.inner.axis().bin_edges().to_vec().into_py(py)
     }
 
     fn __len__(&self) -> usize {

@@ -1,3 +1,6 @@
+default:
+    just --list
+
 test-rust:
     cargo test
 

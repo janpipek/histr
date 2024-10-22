@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::fmt::Debug;
 use std::iter::zip;
 
@@ -6,14 +7,21 @@ pub struct GeneralAxis {
     bin_edges: Vec<f64>,
 }
 
-pub trait Axis: Debug + Send {
-    fn bin_edges(&self) -> &Vec<f64>;
+#[derive(Debug, PartialEq, Clone)]
+pub struct FixedWidthAxis { min_edge: f64,
+    max_edge: f64,
+    bin_width: f64,
+    n_bins: usize,
+}
 
-    fn min(&self) -> f64 {
+pub trait Axis: Debug + Send {
+    fn bin_edges(&self) -> Cow<Vec<f64>>;
+
+    fn min_edge(&self) -> f64 {
         self.bin_edges()[0]
     }
 
-    fn max(&self) -> f64 {
+    fn max_edge(&self) -> f64 {
         *self.bin_edges().last().unwrap()
     }
 
@@ -57,7 +65,7 @@ pub trait Axis: Debug + Send {
     }
 
     fn find_bin(&self, value: f64) -> Option<usize> {
-        if value < self.min() {
+        if value < self.min_edge() {
             return None;
         }
         for (i, edge) in self.bin_edges().iter().skip(1).enumerate() {
@@ -65,7 +73,7 @@ pub trait Axis: Debug + Send {
                 return Some(i);
             }
         }
-        if value == self.max() {
+        if value == self.max_edge() {
             return Some(self.len() - 1);
         }
         None
@@ -84,6 +92,78 @@ impl GeneralAxis {
     }
 }
 
+impl FixedWidthAxis {
+    pub fn new(min_edge: f64, max_edge: f64, bin_width: f64, n_bins: usize) -> Self {
+        Self {
+            min_edge,
+            max_edge,
+            bin_width,
+            n_bins
+        }
+    }
+
+    pub fn create_from_min_and_bins(min_edge: f64, bin_width: f64, n_bins: usize) -> Self {
+        Self {
+            min_edge,
+            max_edge: min_edge + bin_width * n_bins as f64,
+            bin_width,
+            n_bins
+        }
+    }
+
+    pub fn create_from_range(min_edge: f64, max_edge: f64, bin_width: f64) -> Self {
+        // TODO: Make sure 5.00000001 bins do not become 6
+        Self {
+            min_edge,
+            max_edge,
+            bin_width,
+            n_bins: ((max_edge - min_edge) / bin_width).ceil() as usize,
+        }
+    }
+}
+
+impl Axis for FixedWidthAxis {
+    fn bin_edges(&self) -> Cow<Vec<f64>> {
+        let mut edges = vec![self.min_edge];
+        for i in 1..(self.n_bins as usize) {
+            edges.push(self.min_edge + i as f64 * self.bin_width);
+        }
+        edges.push(self.max_edge);
+        Cow::Owned(edges)
+    }
+
+    fn min_edge(&self) -> f64 {
+        self.min_edge
+    }
+
+    fn max_edge(&self) -> f64 {
+        self.max_edge
+    }
+    
+    fn find_bin(&self, value: f64) -> Option<usize> {
+        if value < self.min_edge {
+            return None;
+        }
+        if value == self.max_edge {
+            return Some((self.n_bins - 1) as usize);
+        }
+        let bin = ((value - self.min_edge) / self.bin_width).floor() as usize;
+        if bin >= self.n_bins {
+            return None;
+        }
+        Some(bin)
+    }
+
+    fn clone_box(&self) -> Box<dyn Axis> {
+        return Box::new(FixedWidthAxis {
+            min_edge: self.min_edge,
+            n_bins: self.n_bins,
+            max_edge: self.max_edge,
+            bin_width: self.bin_width,
+        });
+    }
+}
+
 impl From<&[f64]> for Box<GeneralAxis> {
     fn from(value: &[f64]) -> Self {
         return Box::new(GeneralAxis::new(value.to_vec()));
@@ -91,8 +171,8 @@ impl From<&[f64]> for Box<GeneralAxis> {
 }
 
 impl Axis for GeneralAxis {
-    fn bin_edges(&self) -> &Vec<f64> {
-        &self.bin_edges
+    fn bin_edges(&self) -> Cow<Vec<f64>> {
+        Cow::Borrowed(&self.bin_edges)
     }
 
     fn clone_box(&self) -> Box<dyn Axis> {
