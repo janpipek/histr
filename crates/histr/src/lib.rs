@@ -13,13 +13,13 @@ pub fn h1(data: &[f64]) -> Result<H1<'static>, Box<dyn Error>> {
     let binning_algorithm: PrettyBins = PrettyBins { approx_bins: 12 };
     let axis = binning_algorithm.find_axis(data)?;
     let values = axis.as_ref().apply(data);
-    Ok(H1::new(axis, values))
+    Ok(H1::from_vec(axis, values))
 }
 
 pub fn h1_with_bins(data: &[f64], bins: &[f64]) -> H1<'static> {
     let axis: Box<GeneralAxis> = Box::from(bins);
     let values = axis.as_ref().apply(data);
-    H1::new(axis, values)
+    H1::from_vec(axis, values)
 }
 
 pub fn h1_with_binning(
@@ -28,7 +28,7 @@ pub fn h1_with_binning(
 ) -> Result<H1<'static>, Box<dyn Error>> {
     let axis = binning.find_axis(data)? as Box<dyn Axis>;
     let values = axis.as_ref().apply(data);
-    Ok(H1::new(axis, values))
+    Ok(H1::from_vec(axis, values))
 }
 
 #[macro_export]

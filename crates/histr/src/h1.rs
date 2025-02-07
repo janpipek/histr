@@ -1,27 +1,30 @@
 use crate::axis::Axis;
 use crate::bin::Bin;
 use std::ops::{Add, Mul};
+use arrow::array::Float64Array;
+use arrow::compute::sum;
 
 #[derive(Debug)]
 pub struct H1<'a> {
     // We will probably want some meta-data here
     axis: Box<dyn Axis + 'a>,
-    bin_contents: Vec<f64>,
+    bin_contents: Float64Array,
 }
 
 impl<'a> H1<'a> {
-    pub fn new(axis: Box<dyn Axis>, bin_contents: Vec<f64>) -> Self {
+    pub fn from_vec(axis: Box<dyn Axis>, bin_contents: Vec<f64>) -> Self {
         if axis.len() != bin_contents.len() {
             panic!("Axis and contents lengths must match.");
         }
-        H1 { axis, bin_contents }
+        let arr = Float64Array::from(bin_contents);
+        H1 { axis, bin_contents: arr }
     }
 
     pub fn axis(&self) -> &dyn Axis {
         self.axis.as_ref()
     }
 
-    pub fn bin_contents(&self) -> &Vec<f64> {
+    pub fn bin_contents(&self) -> &Float64Array {
         &self.bin_contents
     }
 
@@ -30,7 +33,11 @@ impl<'a> H1<'a> {
     }
 
     pub fn total(&self) -> f64 {
-        self.bin_contents.iter().sum()
+        if let Some(value) = sum(&self.bin_contents) {
+            value
+        } else {
+            0.0
+        }
     }
 
     pub fn get_bin(&self, n: usize) -> Option<Bin> {
@@ -92,12 +99,7 @@ impl<'a> Add<&H1<'_>> for &H1<'a> {
         }
         Ok(H1 {
             axis: self.axis.clone_box(), // or not clone?
-            bin_contents: self
-                .bin_contents
-                .iter()
-                .zip(other.bin_contents.iter())
-                .map(|(a, b)| a + b)
-                .collect(),
+            bin_contents: self.clone().bin_contents + other.clone().bin_contents,
         })
     }
 }
@@ -108,7 +110,7 @@ impl<'a> Mul<f64> for &H1<'a> {
     fn mul(self, other: f64) -> Result<H1<'static>, &'static str> {
         Ok(H1 {
             axis: self.axis.clone_box(), // or not clone?
-            bin_contents: self.bin_contents.iter().map(|&a| other * a).collect(),
+            bin_contents: &self.bin_contents * a,
         })
     }
 }
