@@ -8,8 +8,8 @@ build:
     maturin build
 
 ipython:
-    maturin develop --uv
     uv sync
+    maturin develop --uv
     uv run ipython
 
 clean:
@@ -19,4 +19,3 @@ test-python:
     uv run pytest
 
 test: test-rust test-python
-    

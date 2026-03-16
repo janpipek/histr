@@ -1,5 +1,4 @@
 use pyo3::exceptions::PyException;
-use pyo3::PyObject;
 use pyo3::prelude::*;
 use histr::*;
 
@@ -11,13 +10,13 @@ pub struct PyH1 {
 #[pymethods]
 impl PyH1 {
     #[getter]
-    fn bin_contents(&self, py: Python) -> PyObject {
-        self.inner.bin_contents().clone().into_py(py)
+    fn bin_contents<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        Ok(self.inner.bin_contents().clone().into_pyobject(py)?.into_any())
     }
 
     #[getter]
-    fn bin_edges(&self, py: Python) -> PyObject {
-        self.inner.axis().bin_edges().to_vec().into_py(py)
+    fn bin_edges<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        Ok(self.inner.axis().bin_edges().to_vec().into_pyobject(py)?.into_any())
     }
 
     fn __len__(&self) -> usize {
@@ -38,7 +37,7 @@ impl PyH1 {
     }
 
     #[pyo3(signature = (values, *, weights=None))]
-    fn fill_many(&mut self, py: Python<'_>, values: PyObject, weights: Option<PyObject>) -> PyResult<()> {
+    fn fill_many(&mut self, py: Python<'_>, values: Py<PyAny>, weights: Option<Py<PyAny>>) -> PyResult<()> {
         let values: Vec<f64> = values.extract(py).unwrap();
         match weights {
             Some(weights) => {
@@ -59,7 +58,7 @@ impl PyH1 {
 
 #[pyfunction(name = "h1")]
 #[pyo3(signature = (data, *, bin_width=None, bin_edges=None))]
-fn py_h1(py: Python<'_>, data: PyObject, bin_width: Option<f64>, bin_edges: Option<PyObject>) -> PyResult<PyH1> {
+fn py_h1(py: Python<'_>, data: Py<PyAny>, bin_width: Option<f64>, bin_edges: Option<Py<PyAny>>) -> PyResult<PyH1> {
     let values: Vec<f64> = data.extract(py)?;
     let h1 = match bin_width {
         Some(bin_width) => h1!(&values, bin_width: bin_width),

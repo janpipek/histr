@@ -8,4 +8,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 histr = { version = "0.1.0", path = "../histr" }
-pyo3 = "0.22.5"
+pyo3 = "0.28.2"

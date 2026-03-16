@@ -14,7 +14,7 @@ pub struct FixedWidthAxis { min_edge: f64,
     n_bins: usize,
 }
 
-pub trait Axis: Debug + Send {
+pub trait Axis: Debug + Send + Sync {
     fn bin_edges(&self) -> Cow<Vec<f64>>;
 
     fn min_edge(&self) -> f64 {
